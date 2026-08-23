@@ -159,6 +159,13 @@ Before the region is committed you can use the startup overlay tools:
 
 `Esc` cancels the session; right click (no startup tool) also cancels.
 
+An optional selection loupe is off by default. Enable it in
+**Settings → Capture → Selection Loupe**, or set
+`capture.selectionLoupe.enabled` to `true`. Arrow keys nudge the pointer by one
+pixel (Shift+arrow by ten). On Wayland, if the compositor cannot warp the
+system cursor, a software crosshair is drawn at the logical point and clicks
+follow that point. The mouse wheel resizes the loupe.
+
 ---
 
 ## 4. Annotation Tools
@@ -212,7 +219,7 @@ then be moved, resized, rotated and deleted together.
 | `Ctrl+C` | copy to clipboard |
 | `Ctrl+S` / `Enter` | save (path template from settings) |
 | `Ctrl+P` | pin as a floating sticker window |
-| `Ctrl+U` | upload to the configured image host; URL is copied |
+| `Ctrl+U` | upload to the configured image host; the returned URL is copied and remains after Mark Shot exits on Wayland |
 | `Ctrl+Z` / `Ctrl+Y` | undo / redo |
 | `F` | toggle the capture scope (selection ↔ full screen) |
 
@@ -241,6 +248,10 @@ rounded corners, and a soft shadow to saved / copied / uploaded images.
 OCR text inside a pinned window is selectable and copyable (`Ctrl+C` /
 context menu). Translation (OpenAI-compatible endpoint) renders the translated
 text back onto the image at the original layout positions.
+
+On KDE Plasma Wayland, `pinnedWindow.alwaysOnTop` is applied through a session
+KWin script so the sticker stays above other windows. The window remains a
+normal xdg-toplevel, so dragging and resizing are unchanged.
 
 ---
 

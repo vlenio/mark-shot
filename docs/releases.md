@@ -1,5 +1,14 @@
 # Release Notes
 
+### 0.1.49
+
+- **Selection Loupe**: Optional magnifier and arrow-key pointer nudge while picking a region. Off by default; enable it in Settings -> Capture or with `capture.selectionLoupe.enabled`. On Wayland the logical pointer is used when the compositor cannot warp the system cursor.
+- **GNOME Shortcuts**: Custom keybinding values are escaped as GVariant strings so GNOME Wayland tray hotkeys register.
+- **Smoother Wayland Selection**: High-refresh GNOME displays no longer full-repaint on every pointer event, and LayerShellQt is skipped where GNOME does not support it.
+- **Wayland Upload Clipboard**: Image-host URLs remain in the clipboard after Mark Shot exits.
+- **KDE Pinned Always-on-Top**: Pinned stickers stay above other windows on Plasma Wayland through a KWin script.
+- **Kvantum Tooltips and GNOME Helper Backoff**: Hover labels stay readable on dark Kvantum themes, and a missing GNOME window helper is not retried every capture.
+
 ### 0.1.48
 
 - **Double Click Action**: Double clicking an empty area inside the selection finishes a capture in one gesture. Pick the action in Settings -> Capture -> Double Click Action: copy and close (default), save to the default folder, save as, pin to screen, cancel, or do nothing. Double clicking a text annotation still opens the inline editor.

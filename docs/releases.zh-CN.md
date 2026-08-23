@@ -1,5 +1,14 @@
 # 发版说明
 
+### 0.1.49
+
+- **选区放大镜**：框选时可在光标旁显示放大镜，并用方向键微调指针。默认关闭，在 设置 -> 截图 或 `capture.selectionLoupe.enabled` 中开启。Wayland 无法挪动系统光标时改用逻辑指针。
+- **GNOME 快捷键**：写入 gsettings 的值按 GVariant 字符串转义，GNOME Wayland 托盘快捷键可以注册成功。
+- **更顺的 Wayland 框选**：高刷新率 GNOME 不再对每个指针事件整屏重绘；不支持 layer-shell 时不再加载 LayerShellQt。
+- **Wayland 上传剪贴板**：图床 URL 在 Mark Shot 退出后仍留在剪贴板。
+- **KDE 钉图置顶**：Plasma Wayland 上通过 KWin 脚本保持钉图窗口在其他窗口之上。
+- **Kvantum 提示框与 GNOME helper 退避**：深色 Kvantum 下悬停文字可读；缺失的 GNOME 窗口检测 helper 不会每次截图都重试。
+
 ### 0.1.48
 
 - **双击手势动作**：在选区内空白处双击即可一步完成截图。动作在 设置 -> 截图 -> 双击动作 中选择：复制并关闭（默认）、保存到默认目录、另存为、钉到屏幕、取消截图，或不执行动作。双击文字标注仍然进入就地编辑。

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.49 - 2026-08-23
+
+### Features & Enhancements
+
+- **Selection Loupe**: Region selection can show a magnifier next to the cursor and nudge the pointer with the arrow keys (Shift+arrow moves 10 pixels). The feature is off by default and is enabled from Settings -> Capture -> Selection Loupe or `capture.selectionLoupe.enabled`. On Wayland, if the compositor rejects cursor warping, the system pointer is hidden and a software crosshair is drawn at the logical point; clicks and drags use that point.
+
+### Bug Fixes
+
+- **GNOME Custom Shortcuts**: `gsettings` values are written as quoted GVariant string literals, so commands such as `"/usr/bin/mark-shot" --capture` register instead of failing at the space after the quoted path.
+- **High-refresh Wayland Selection**: Initial region dragging coalesces full-frame repaints and skips loading LayerShellQt on GNOME Wayland, which does not support layer-shell.
+- **GNOME Window Helper Backoff**: A missing or failing bundled GNOME window-detection helper is not probed again for 30 seconds in the same process.
+- **Kvantum Tooltips**: The process-wide `QToolTip` palette and stylesheet follow the application theme so hover labels stay readable on dark Kvantum frames.
+- **Wayland Upload Clipboard**: An uploaded image URL is published through a persistent `wl-copy` owner when available, so the clipboard still holds the URL after Mark Shot exits. A failed copy now reports “Copy failed” instead of a false success toast.
+- **KDE Pinned Always-on-Top**: Pinned sticker windows stay above other windows on Plasma Wayland by loading a session KWin script that sets `keepAbove`. The window remains a normal xdg-toplevel, so dragging and resizing are unchanged.
+
 ## 0.1.48 - 2026-08-16
 
 ### Features & Enhancements

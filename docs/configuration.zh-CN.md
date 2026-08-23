@@ -40,6 +40,9 @@ Mark Shot 在 Linux 上从 `~/.config/mark-shot/config.json` 读取应用配置�
   },
   "capture": {
     "hideOwnWindows": true,
+    "selectionLoupe": {
+      "enabled": false
+    },
     "wayland": {
       "kde": {
         "kwinScreenshot": {
@@ -170,6 +173,7 @@ Mark Shot 在 Linux 上从 `~/.config/mark-shot/config.json` 读取应用配置�
 | `upload.timeoutMs` | 数值 | `60000` | 上传命令超时时间。环境变量 `MARK_SHOT_UPLOAD_TIMEOUT_MS` 可以覆盖该值。 |
 | `upload.env` | 对象 | `{}` | 传递给上传命令的环境变量。会合并到系统环境变量之上。用于配置内置 `mark-shot-upload` 脚本的图床参数（端点、字段、API Key、认证方案、URL 提取路径等）。别名：`environment`、`envVars`、`variables`。 |
 | `pinnedWindow.autoOcr` | 布尔值 | `false` | 控制贴图窗口创建后是否立即在后台自动启动 OCR 文本识别。如果禁用，则仅在右键菜单中触发复制文字或翻译时按需识别。别名：`pinned`、`pin`。 |
+| `pinnedWindow.alwaysOnTop` | 布尔值 | `true` | 控制钉图窗口是否保持在其他窗口之上。右键菜单可切换该值并写回 `config.json`。GNOME Wayland 在辅助扩展可用时走扩展接口。KDE Plasma Wayland 通过会话内 KWin 脚本设置 `keepAbove`，不改用 layer-shell。 |
 | `pinnedWindow.border` | 布尔值/对象 | `true` | 贴图窗口外边框的配置。可以为布尔值，或者包含 `enabled` (布尔值)、`color` (十六进制/名称/RGBA对象) 和 `width` (浮点数，`1.0` - `12.0`) 的配置对象。也支持 `borderEnabled`、`borderColor`、`borderWidth` 平铺配置。 |
 | `scrollCapture.frame` | 布尔值/数值/对象 | `5` | 滚动截图外框偏移。数值表示实际捕获区域和外框之间的像素间距；`false` 关闭外框。对象形式支持 `enabled` 和 `gap`。别名：`captureFrame`、`border`、`outline`，也支持平铺的 `frameEnabled` / `frameGap`。 |
 | `scrollCapture.previewGap` | 数值/对象 | `5` | 外框和滚动预览面板之间的像素间距。预览面板会在外框周围选择第一个可用的不重叠位置。别名：`previewDistance`、`previewOffset`、`panelGap`；对象形式支持 `gap`。 |
