@@ -87,7 +87,10 @@ void ShotWindow::uploadSelection()
         return;
     }
 
-    markshot::copyTextToClipboard(url);
+    if (!markshot::copyTextToClipboard(url)) {
+        showToast(MS_TR("Copy failed"));
+        return;
+    }
     if (!sendDesktopNotification(QStringLiteral("Mark Shot"), MS_TR("Image URL copied"), 2500)) {
         showToast(MS_TR("Image URL copied"));
     }

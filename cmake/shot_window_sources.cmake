@@ -36,7 +36,12 @@ set(MARK_SHOT_WINDOW_SOURCES
     src/shot_window_pinned_window.cpp
     src/shot_window_property_panels.cpp
     src/shot_window_qt_fwd.h
+    src/selection_cursor_nudge.cpp
+    src/selection_cursor_nudge.h
+    src/selection_loupe.cpp
+    src/selection_loupe.h
     src/shot_window_selection_frame.cpp
+    src/shot_window_selection_repaint.cpp
     src/shot_window_setup.cpp
     src/shot_window_shortcut_registration.cpp
     src/shot_window_shortcuts.cpp

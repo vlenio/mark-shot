@@ -1,82 +1,10 @@
 #include "shot_window_module.h"
 
+#include "selection_loupe.h"
+
 namespace cfg = markshot::config;
 namespace shortcuts = markshot::shortcut;
 using namespace markshot::shot;
-
-void ShotWindow::scheduleInitialSelectionRepaint(const QRegion &region)
-{
-    if (region.isEmpty()) {
-        return;
-    }
-
-    m_pendingInitialSelectionRepaint |= region;
-    if (m_initialSelectionRepaintTimer && !m_initialSelectionRepaintTimer->isActive()) {
-        m_initialSelectionRepaintTimer->start();
-    }
-}
-
-void ShotWindow::flushInitialSelectionRepaint()
-{
-    if (m_initialSelectionRepaintTimer) {
-        m_initialSelectionRepaintTimer->stop();
-    }
-
-    const QRegion pending = std::exchange(m_pendingInitialSelectionRepaint, QRegion());
-    if (!pending.isEmpty()) {
-        update(pending);
-    }
-}
-
-QRegion ShotWindow::initialSelectionDirtyRegion(const QRectF &previousSelection,
-                                                 bool previousSelectionUsable) const
-{
-    const QRectF currentSelection = normalizedSelection();
-    const bool currentSelectionUsable = currentSelection.width() >= kMinSelectionSize
-        && currentSelection.height() >= kMinSelectionSize;
-
-    // Before a usable rectangle exists the entire overlay uses the lighter
-    // startup dim. Crossing that threshold changes the whole backdrop once.
-    if (!previousSelectionUsable || !currentSelectionUsable) {
-        return QRegion(rect());
-    }
-
-    const QRect previousRect = imageRectToWidget(previousSelection).toAlignedRect();
-    const QRect currentRect = imageRectToWidget(currentSelection).toAlignedRect();
-    QRegion dirty(previousRect);
-    dirty ^= QRegion(currentRect);
-
-    // The selection border and its dimension label are drawn outside the
-    // changing dim area. Add just that chrome instead of invalidating the
-    // complete selection rectangle.
-    auto chromeRegion = [](const QRect &selection) {
-        constexpr int kBorderPadding = 4;
-        constexpr int kLabelWidth = 160;
-        constexpr int kLabelHeight = 40;
-
-        const QRect outer = selection.adjusted(-kBorderPadding,
-                                               -kBorderPadding,
-                                               kBorderPadding,
-                                               kBorderPadding);
-        const QRect inner = selection.adjusted(kBorderPadding,
-                                               kBorderPadding,
-                                               -kBorderPadding,
-                                               -kBorderPadding);
-        QRegion chrome(outer);
-        if (inner.isValid()) {
-            chrome -= inner;
-        }
-        chrome |= QRect(selection.left() + 4,
-                        selection.top() + 4,
-                        kLabelWidth,
-                        kLabelHeight);
-        return chrome;
-    };
-
-    dirty |= chromeRegion(previousRect);
-    dirty |= chromeRegion(currentRect);
-    return dirty.intersected(rect());
-}
 
 void ShotWindow::mouseMoveEvent(QMouseEvent *event)
 {
@@ -128,24 +56,58 @@ void ShotWindow::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-    if (m_mode == Mode::Selecting && !m_dragging) {
-        const QPoint imgPt = imagePoint.toPoint();
-        const std::optional<QRect> bestRect =
-            markshot::window_selection::topmostWindowRectAt(m_windowInfos, imgPt);
-        if (bestRect != m_hoveredWindowRect) {
-            m_hoveredWindowRect = bestRect;
-            update();
+    auto selectionLoupeDirty = [this](QPointF hoverPoint) -> QRegion {
+        if (m_frozenFrame.isNull()) {
+            return {};
         }
-    }
-    if (m_mode == Mode::Selecting && m_dragging) {
-        const QRectF previousSelection = normalizedSelection();
-        const bool previousSelectionUsable = previousSelection.width() >= kMinSelectionSize
-            && previousSelection.height() >= kMinSelectionSize;
-        m_selection = normalizedRect(m_selectionStart, imagePoint);
-        revealSelectionInfo();
-        scheduleInitialSelectionRepaint(
-            initialSelectionDirtyRegion(previousSelection, previousSelectionUsable));
-        return;
+        const SelectionLoupeLayout layout =
+            selectionLoupeLayout(imageToWidget(hoverPoint),
+                                 size(),
+                                 m_startupColorLoupeSize,
+                                 hoverPoint,
+                                 m_frozenFrame.size());
+        return QRegion(selectionLoupeDirtyRect(layout));
+    };
+
+    if (m_mode == Mode::Selecting) {
+        QRegion dirty;
+        if (m_startupHoverValid) {
+            dirty |= selectionLoupeDirty(m_startupHoverImagePoint);
+        }
+        if (m_frozenImageRect.contains(event->position()) || m_dragging) {
+            m_startupHoverImagePoint = clampImagePoint(imagePoint);
+            m_startupHoverValid = true;
+            dirty |= selectionLoupeDirty(m_startupHoverImagePoint);
+        } else {
+            m_startupHoverValid = false;
+        }
+
+        if (!m_dragging) {
+            const QPoint imgPt = imagePoint.toPoint();
+            const std::optional<QRect> bestRect =
+                markshot::window_selection::topmostWindowRectAt(m_windowInfos, imgPt);
+            if (bestRect != m_hoveredWindowRect) {
+                if (m_hoveredWindowRect.has_value()) {
+                    dirty |= QRegion(imageRectToWidget(QRectF(*m_hoveredWindowRect)).toAlignedRect());
+                }
+                m_hoveredWindowRect = bestRect;
+                if (m_hoveredWindowRect.has_value()) {
+                    dirty |= QRegion(imageRectToWidget(QRectF(*m_hoveredWindowRect)).toAlignedRect());
+                }
+            }
+            if (!dirty.isEmpty()) {
+                update(dirty);
+            }
+        } else {
+            const QRectF previousSelection = normalizedSelection();
+            const bool previousSelectionUsable = previousSelection.width() >= kMinSelectionSize
+                && previousSelection.height() >= kMinSelectionSize;
+            m_selection = normalizedRect(m_selectionStart, imagePoint);
+            revealSelectionInfo();
+            scheduleInitialSelectionRepaint(
+                initialSelectionDirtyRegion(previousSelection, previousSelectionUsable) | dirty);
+            return;
+        }
     }
 
     if (m_mode == Mode::Editing && m_tool == Tool::Select && m_dragging && m_annotationDrag != SelectionDrag::None) {

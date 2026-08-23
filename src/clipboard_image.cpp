@@ -1,6 +1,7 @@
 #include "clipboard_image.h"
 
 #include "clipboard_image_config.h"
+#include "clipboard_publish_policy.h"
 
 #include <QApplication>
 #include <QBuffer>
@@ -233,17 +234,19 @@ bool copyToPersistentClipboardOwner(const QByteArray &payload, const QString &su
 /// @return True if the image was successfully copied.
 bool copyImageDataToClipboard(const QImage &image, const QByteArray &png)
 {
-    bool copied = false;
-    if (QClipboard *clipboard = QApplication::clipboard()) {
+    QClipboard *clipboard = QApplication::clipboard();
+    const std::optional<ClipboardOwnerCommand> owner =
+        clipboardOwnerCommand(ClipboardPayload::ImagePng);
+    switch (chooseClipboardPublishPath(owner.has_value(), clipboard != nullptr)) {
+    case ClipboardPublishPath::PersistentOwner:
+        return copyToPersistentClipboardOwner(png, QStringLiteral(".png"), *owner);
+    case ClipboardPublishPath::QtClipboard:
         clipboard->setImage(image);
-        copied = true;
+        return true;
+    case ClipboardPublishPath::None:
+        break;
     }
-
-    const std::optional<ClipboardOwnerCommand> owner = clipboardOwnerCommand(ClipboardPayload::ImagePng);
-    if (owner.has_value()) {
-        copied = copyToPersistentClipboardOwner(png, QStringLiteral(".png"), *owner) || copied;
-    }
-    return copied;
+    return false;
 }
 
 /// @brief Copies a URL to both the system clipboard and a persistent clipboard owner process.
@@ -252,21 +255,23 @@ bool copyImageDataToClipboard(const QImage &image, const QByteArray &png)
 bool copyUrlToClipboard(const QUrl &url)
 {
     const QString urlText = url.toString(QUrl::FullyEncoded);
-    bool copied = false;
-
-    if (QClipboard *clipboard = QApplication::clipboard()) {
+    QClipboard *clipboard = QApplication::clipboard();
+    const std::optional<ClipboardOwnerCommand> owner =
+        clipboardOwnerCommand(ClipboardPayload::Text);
+    switch (chooseClipboardPublishPath(owner.has_value(), clipboard != nullptr)) {
+    case ClipboardPublishPath::PersistentOwner:
+        return copyToPersistentClipboardOwner(urlText.toUtf8(), QStringLiteral(".txt"), *owner);
+    case ClipboardPublishPath::QtClipboard: {
         auto *mimeData = new QMimeData;
         mimeData->setText(urlText);
         mimeData->setUrls({url});
         clipboard->setMimeData(mimeData);
-        copied = true;
+        return true;
     }
-
-    const std::optional<ClipboardOwnerCommand> owner = clipboardOwnerCommand(ClipboardPayload::Text);
-    if (owner.has_value()) {
-        copied = copyToPersistentClipboardOwner(urlText.toUtf8(), QStringLiteral(".txt"), *owner) || copied;
+    case ClipboardPublishPath::None:
+        break;
     }
-    return copied;
+    return false;
 }
 
 /**
@@ -288,17 +293,19 @@ bool copyTextToClipboard(const QString &text)
         return false;
     }
 
-    bool copied = false;
-    if (QClipboard *clipboard = QApplication::clipboard()) {
+    QClipboard *clipboard = QApplication::clipboard();
+    const std::optional<ClipboardOwnerCommand> owner =
+        clipboardOwnerCommand(ClipboardPayload::Text);
+    switch (chooseClipboardPublishPath(owner.has_value(), clipboard != nullptr)) {
+    case ClipboardPublishPath::PersistentOwner:
+        return copyToPersistentClipboardOwner(text.toUtf8(), QStringLiteral(".txt"), *owner);
+    case ClipboardPublishPath::QtClipboard:
         clipboard->setText(text);
-        copied = true;
+        return true;
+    case ClipboardPublishPath::None:
+        break;
     }
-
-    const std::optional<ClipboardOwnerCommand> owner = clipboardOwnerCommand(ClipboardPayload::Text);
-    if (owner.has_value()) {
-        copied = copyToPersistentClipboardOwner(text.toUtf8(), QStringLiteral(".txt"), *owner) || copied;
-    }
-    return copied;
+    return false;
 }
 
 bool copyImageToClipboard(const QImage &image)

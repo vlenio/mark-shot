@@ -1,6 +1,7 @@
 #include "shot_window_module.h"
 
 #include "debug_log.h"
+#include "selection_loupe.h"
 
 namespace cfg = markshot::config;
 namespace shortcuts = markshot::shortcut;
@@ -43,6 +44,7 @@ QVector<markshot::startup_hint::ShortcutHintItem> ShotWindow::startupShortcutHin
 
     QVector<markshot::startup_hint::ShortcutHintItem> items = {
         {MS_TR("Drag"), MS_TR("Select screenshot region"), InputIcon::Mouse},
+        {MS_TR("Arrow keys"), MS_TR("Nudge cursor"), InputIcon::Keyboard},
         {shortcutTextOr(m_startupColorPickerShortcut, QStringLiteral("C")), MS_TR("Pick color"), InputIcon::Keyboard},
         {shortcutTextOr(m_startupRulerShortcut, QStringLiteral("R")), MS_TR("Measure size"), InputIcon::Keyboard},
         {shortcutTextOr(m_startupCodeScannerShortcut, QStringLiteral("Q")), MS_TR("Scan QR or barcode"), InputIcon::Keyboard},
@@ -422,6 +424,22 @@ void ShotWindow::paintEvent(QPaintEvent *event)
     }
 
     drawStartupToolOverlay(painter);
+    if (m_mode == Mode::Selecting
+        && m_startupHoverValid
+        && m_startupTool != StartupTool::ColorPicker
+        && m_startupTool != StartupTool::Ruler
+        && !m_frozenFrame.isNull()) {
+        const SelectionLoupeLayout layout =
+            selectionLoupeLayout(imageToWidget(m_startupHoverImagePoint),
+                                 size(),
+                                 m_startupColorLoupeSize,
+                                 m_startupHoverImagePoint,
+                                 m_frozenFrame.size());
+        const QString caption = QStringLiteral("%1, %2")
+                                    .arg(qRound(m_startupHoverImagePoint.x()))
+                                    .arg(qRound(m_startupHoverImagePoint.y()));
+        drawSelectionLoupe(painter, m_frozenFrame, layout, caption);
+    }
     drawStartupShortcutHint(painter);
     drawActiveRecordingStatus(painter);
 

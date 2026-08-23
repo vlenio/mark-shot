@@ -242,3 +242,60 @@ target_link_libraries(mark-shot-stitcher-fixed-regions-test
         Qt6::Test
 )
 add_test(NAME stitcher-fixed-regions COMMAND mark-shot-stitcher-fixed-regions-test)
+
+qt_add_executable(mark-shot-clipboard-publish-policy-test
+    tests/clipboard_publish_policy_test.cpp
+    src/clipboard_publish_policy.cpp
+    src/clipboard_publish_policy.h
+)
+target_include_directories(mark-shot-clipboard-publish-policy-test PRIVATE src)
+target_link_libraries(mark-shot-clipboard-publish-policy-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Test
+)
+add_test(NAME clipboard-publish-policy COMMAND mark-shot-clipboard-publish-policy-test)
+
+qt_add_executable(mark-shot-selection-cursor-nudge-test
+    tests/selection_cursor_nudge_test.cpp
+    src/selection_cursor_nudge.cpp
+    src/selection_cursor_nudge.h
+)
+target_include_directories(mark-shot-selection-cursor-nudge-test PRIVATE src)
+target_link_libraries(mark-shot-selection-cursor-nudge-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME selection-cursor-nudge COMMAND mark-shot-selection-cursor-nudge-test)
+
+qt_add_executable(mark-shot-selection-loupe-test
+    tests/selection_loupe_test.cpp
+    src/selection_loupe.cpp
+    src/selection_loupe.h
+)
+target_include_directories(mark-shot-selection-loupe-test PRIVATE src)
+target_link_libraries(mark-shot-selection-loupe-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME selection-loupe COMMAND mark-shot-selection-loupe-test)
+
+qt_add_executable(mark-shot-pinned-kde-keep-above-test
+    tests/pinned_kde_keep_above_test.cpp
+    src/pinned_window/pinned_kde_keep_above.cpp
+    src/pinned_window/pinned_kde_keep_above.h
+    src/debug_log.cpp
+    src/debug_log.h
+)
+target_include_directories(mark-shot-pinned-kde-keep-above-test PRIVATE src)
+target_link_libraries(mark-shot-pinned-kde-keep-above-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME pinned-kde-keep-above COMMAND mark-shot-pinned-kde-keep-above-test)

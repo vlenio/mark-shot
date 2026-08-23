@@ -222,6 +222,8 @@ const QHash<QString, QString> &chineseTable()
         {QStringLiteral("Upload failed"), QStringLiteral("上传失败")},
         {QStringLiteral("Upload timed out"), QStringLiteral("上传超时")},
         {QStringLiteral("Copy failed"), QStringLiteral("复制失败")},
+        {QStringLiteral("Arrow keys"), QStringLiteral("方向键")},
+        {QStringLiteral("Nudge cursor"), QStringLiteral("微调光标")},
         {QStringLiteral("Failed to save pinned window setting."), QStringLiteral("保存置顶图片设置失败。")},
         {QStringLiteral("Failed to save pinned text selection setting."), QStringLiteral("保存置顶图片拖选设置失败。")},
         {QStringLiteral("OCR Result"), QStringLiteral("OCR 结果")},

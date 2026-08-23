@@ -102,6 +102,8 @@ qt_add_executable(mark-shot
     src/clipboard_image.h
     src/clipboard_image_config.cpp
     src/clipboard_image_config.h
+    src/clipboard_publish_policy.cpp
+    src/clipboard_publish_policy.h
     src/code_scan_result.cpp
     src/code_scan_result.h
     src/cli/image_pin_launch.cpp
@@ -210,6 +212,8 @@ qt_add_executable(mark-shot
     src/pinned_window/pinned_text_selection_metrics.h
     src/pinned_window_top.cpp
     src/pinned_window_top.h
+    src/pinned_window/pinned_kde_keep_above.cpp
+    src/pinned_window/pinned_kde_keep_above.h
     src/annotation_launch.cpp
     src/annotation_launch.h
     src/scroll/stitcher.cpp

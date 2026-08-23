@@ -1,5 +1,11 @@
 #include "shot_window_module.h"
 
+#include "selection_cursor_nudge.h"
+#include "selection_loupe.h"
+
+#include <algorithm>
+#include <optional>
+
 using namespace markshot::shot;
 
 namespace {
@@ -58,7 +64,7 @@ qreal annotationWidthWheelStepSize(ShotWindow::Tool tool)
  */
 void ShotWindow::wheelEvent(QWheelEvent *event)
 {
-    if (m_mode == Mode::Selecting && m_startupTool == StartupTool::ColorPicker) {
+    if (m_mode == Mode::Selecting && m_startupTool != StartupTool::Ruler) {
         const int delta = event->angleDelta().y() != 0 ? event->angleDelta().y() : event->pixelDelta().y();
         if (delta == 0) {
             QWidget::wheelEvent(event);
@@ -231,6 +237,62 @@ void ShotWindow::keyPressEvent(QKeyEvent *event)
                 event->accept();
                 return;
             }
+        }
+        if (m_startupTool != StartupTool::Ruler
+            && isSelectionCursorNudgeKey(event->key())
+            && !m_frozenFrame.isNull()) {
+            if (!m_startupHoverValid) {
+                m_startupHoverImagePoint = widgetToImage(mapFromGlobal(QCursor::pos()));
+                m_startupHoverValid = true;
+            }
+
+            QRegion dirty = QRegion(selectionLoupeDirtyRect(
+                selectionLoupeLayout(imageToWidget(m_startupHoverImagePoint),
+                                     size(),
+                                     m_startupColorLoupeSize,
+                                     m_startupHoverImagePoint,
+                                     m_frozenFrame.size())));
+            const QPoint delta =
+                selectionCursorNudgeDelta(event->key(), event->modifiers().testFlag(Qt::ShiftModifier));
+            const QRectF bounds(0.0,
+                                0.0,
+                                std::max(0, m_frozenFrame.width() - 1),
+                                std::max(0, m_frozenFrame.height() - 1));
+            m_startupHoverImagePoint = nudgeSelectionCursor(m_startupHoverImagePoint, delta, bounds);
+            const QPoint widgetPoint = imageToWidget(m_startupHoverImagePoint).toPoint();
+            QCursor::setPos(mapToGlobal(widgetPoint));
+            dirty |= QRegion(selectionLoupeDirtyRect(
+                selectionLoupeLayout(imageToWidget(m_startupHoverImagePoint),
+                                     size(),
+                                     m_startupColorLoupeSize,
+                                     m_startupHoverImagePoint,
+                                     m_frozenFrame.size())));
+
+            if (m_dragging) {
+                const QRectF previousSelection = normalizedSelection();
+                const bool previousSelectionUsable = previousSelection.width() >= kMinSelectionSize
+                    && previousSelection.height() >= kMinSelectionSize;
+                m_selection = normalizedRect(m_selectionStart, m_startupHoverImagePoint);
+                revealSelectionInfo();
+                scheduleInitialSelectionRepaint(
+                    initialSelectionDirtyRegion(previousSelection, previousSelectionUsable) | dirty);
+            } else {
+                const QPoint imgPt = m_startupHoverImagePoint.toPoint();
+                const std::optional<QRect> bestRect =
+                    markshot::window_selection::topmostWindowRectAt(m_windowInfos, imgPt);
+                if (bestRect != m_hoveredWindowRect) {
+                    if (m_hoveredWindowRect.has_value()) {
+                        dirty |= QRegion(imageRectToWidget(QRectF(*m_hoveredWindowRect)).toAlignedRect());
+                    }
+                    m_hoveredWindowRect = bestRect;
+                    if (m_hoveredWindowRect.has_value()) {
+                        dirty |= QRegion(imageRectToWidget(QRectF(*m_hoveredWindowRect)).toAlignedRect());
+                    }
+                }
+                update(dirty);
+            }
+            event->accept();
+            return;
         }
     }
 

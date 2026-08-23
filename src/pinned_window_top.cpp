@@ -2,6 +2,7 @@
 
 #include "debug_log.h"
 #include "layer_shell_runtime.h"
+#include "pinned_window/pinned_kde_keep_above.h"
 #include "pinned_window/pinned_layer_shell_geometry.h"
 #include "pinned_window/pinned_layer_shell_screen_binding.h"
 #include "windows_integration.h"
@@ -321,6 +322,7 @@ void applyPinnedWindowTopState(QWidget *window, bool alwaysOnTop)
 
 #ifdef MARK_SHOT_WITH_DBUS
     applyGnomePinnedWindowsAbove(window->windowTitle(), alwaysOnTop);
+    applyKdePinnedWindowKeepAbove(window->windowTitle(), alwaysOnTop);
 #endif
 }
 
