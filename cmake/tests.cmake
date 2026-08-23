@@ -299,3 +299,19 @@ target_link_libraries(mark-shot-pinned-kde-keep-above-test
         Qt6::Test
 )
 add_test(NAME pinned-kde-keep-above COMMAND mark-shot-pinned-kde-keep-above-test)
+
+qt_add_executable(mark-shot-selection-loupe-config-test
+    tests/selection_loupe_config_test.cpp
+    src/selection_loupe_config.cpp
+    src/selection_loupe_config.h
+    src/config_value.cpp
+    src/config_value.h
+)
+target_include_directories(mark-shot-selection-loupe-config-test PRIVATE src)
+target_link_libraries(mark-shot-selection-loupe-config-test
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+)
+add_test(NAME selection-loupe-config COMMAND mark-shot-selection-loupe-config-test)

@@ -46,6 +46,7 @@ void ShotWindow::enterFullscreenAnnotation(bool resetAnnotations)
         m_selectionBeforeFullscreenAnnotation = normalizedSelection();
     }
     m_mode = Mode::Editing;
+    attachSelectionPointer();
     m_dragging = false;
     m_fullscreenAnnotation = true;
     applyToolbarLayout();
@@ -131,6 +132,7 @@ void ShotWindow::leaveFullscreenAnnotation()
     }
 
     m_mode = Mode::Editing;
+    attachSelectionPointer();
     setFullscreenActionButtonsVisible(false);
     if (m_toolbar) {
         m_toolbar->show();

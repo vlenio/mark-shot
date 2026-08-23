@@ -34,6 +34,18 @@ private slots:
         QCOMPARE(markshot::shot::nudgeSelectionCursor(QPointF(20.0, 20.0), QPoint(1, -1), bounds),
                  QPointF(21.0, 19.0));
     }
+
+    /**
+     * 验证 setPos 失败时判定为未到达目标，硬件光标移动后才重新附着。
+     * @return 无返回值。
+     */
+    void warpFailureKeepsPointerDetachedUntilHardwareMoves()
+    {
+        QVERIFY(markshot::shot::cursorReachedWarpTarget(QPoint(10, 10), QPoint(10, 11)));
+        QVERIFY(!markshot::shot::cursorReachedWarpTarget(QPoint(10, 10), QPoint(40, 10)));
+        QVERIFY(!markshot::shot::hardwarePointerMoved(QPoint(10, 10), QPoint(11, 10)));
+        QVERIFY(markshot::shot::hardwarePointerMoved(QPoint(10, 10), QPoint(13, 10)));
+    }
 };
 
 QTEST_APPLESS_MAIN(SelectionCursorNudgeTest)

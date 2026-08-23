@@ -32,6 +32,7 @@ struct CaptureSettings {
     bool kdeKwinScreenshotEnabled = true;
     bool hideOwnWindows = true;
     CaptureDoubleClickAction doubleClickAction = CaptureDoubleClickAction::Copy;
+    bool selectionLoupeEnabled = false;
 };
 
 struct ShortcutSettings {

@@ -64,7 +64,9 @@ qreal annotationWidthWheelStepSize(ShotWindow::Tool tool)
  */
 void ShotWindow::wheelEvent(QWheelEvent *event)
 {
-    if (m_mode == Mode::Selecting && m_startupTool != StartupTool::Ruler) {
+    if (m_mode == Mode::Selecting
+        && m_startupTool != StartupTool::Ruler
+        && (m_selectionLoupeEnabled || m_startupTool == StartupTool::ColorPicker)) {
         const int delta = event->angleDelta().y() != 0 ? event->angleDelta().y() : event->pixelDelta().y();
         if (delta == 0) {
             QWidget::wheelEvent(event);
@@ -238,7 +240,8 @@ void ShotWindow::keyPressEvent(QKeyEvent *event)
                 return;
             }
         }
-        if (m_startupTool != StartupTool::Ruler
+        if (m_selectionLoupeEnabled
+            && m_startupTool != StartupTool::Ruler
             && isSelectionCursorNudgeKey(event->key())
             && !m_frozenFrame.isNull()) {
             if (!m_startupHoverValid) {
@@ -246,12 +249,16 @@ void ShotWindow::keyPressEvent(QKeyEvent *event)
                 m_startupHoverValid = true;
             }
 
+            const QPointF previousWidgetPoint = imageToWidget(m_startupHoverImagePoint);
             QRegion dirty = QRegion(selectionLoupeDirtyRect(
-                selectionLoupeLayout(imageToWidget(m_startupHoverImagePoint),
+                selectionLoupeLayout(previousWidgetPoint,
                                      size(),
                                      m_startupColorLoupeSize,
                                      m_startupHoverImagePoint,
                                      m_frozenFrame.size())));
+            if (m_selectionPointerDetached) {
+                dirty |= QRegion(selectionPointerDirtyRect(previousWidgetPoint));
+            }
             const QPoint delta =
                 selectionCursorNudgeDelta(event->key(), event->modifiers().testFlag(Qt::ShiftModifier));
             const QRectF bounds(0.0,
@@ -260,7 +267,10 @@ void ShotWindow::keyPressEvent(QKeyEvent *event)
                                 std::max(0, m_frozenFrame.height() - 1));
             m_startupHoverImagePoint = nudgeSelectionCursor(m_startupHoverImagePoint, delta, bounds);
             const QPoint widgetPoint = imageToWidget(m_startupHoverImagePoint).toPoint();
-            QCursor::setPos(mapToGlobal(widgetPoint));
+            detachSelectionPointerIfWarpFailed(widgetPoint);
+            if (m_selectionPointerDetached) {
+                dirty |= QRegion(selectionPointerDirtyRect(QPointF(widgetPoint)));
+            }
             dirty |= QRegion(selectionLoupeDirtyRect(
                 selectionLoupeLayout(imageToWidget(m_startupHoverImagePoint),
                                      size(),

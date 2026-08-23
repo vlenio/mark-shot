@@ -1,5 +1,7 @@
 #include "shot_window_module.h"
 
+#include "selection_cursor_nudge.h"
+
 #include <utility>
 
 using namespace markshot::shot;
@@ -76,4 +78,40 @@ QRegion ShotWindow::initialSelectionDirtyRegion(const QRectF &previousSelection,
     dirty |= chromeRegion(previousRect);
     dirty |= chromeRegion(currentRect);
     return dirty.intersected(rect());
+}
+
+QPointF ShotWindow::selectingPointerImagePoint(QPointF widgetPos)
+{
+    if (m_selectionPointerDetached
+        && !hardwarePointerMoved(m_selectionPointerHardwareAnchor, widgetPos.toPoint())) {
+        return m_startupHoverImagePoint;
+    }
+    if (m_selectionPointerDetached) {
+        attachSelectionPointer();
+    }
+    return widgetToImage(widgetPos);
+}
+
+void ShotWindow::attachSelectionPointer()
+{
+    if (!m_selectionPointerDetached) {
+        return;
+    }
+    m_selectionPointerDetached = false;
+    updateCursor();
+}
+
+void ShotWindow::detachSelectionPointerIfWarpFailed(QPoint widgetPoint)
+{
+    const QPoint requested = mapToGlobal(widgetPoint);
+    QCursor::setPos(requested);
+    if (cursorReachedWarpTarget(requested, QCursor::pos())) {
+        m_selectionPointerDetached = false;
+        updateCursor();
+        return;
+    }
+
+    m_selectionPointerDetached = true;
+    m_selectionPointerHardwareAnchor = mapFromGlobal(QCursor::pos());
+    setCursor(Qt::BlankCursor);
 }

@@ -29,6 +29,7 @@ private:
     QCheckBox *m_hideOwnWindows = nullptr;
     QComboBox *m_freezeScope = nullptr;
     QComboBox *m_doubleClickAction = nullptr;
+    QCheckBox *m_selectionLoupe = nullptr;
 };
 
 }  // namespace markshot::settings

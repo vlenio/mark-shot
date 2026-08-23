@@ -1,5 +1,6 @@
 #include "shot_window_module.h"
 
+#include "selection_cursor_nudge.h"
 #include "selection_loupe.h"
 
 namespace cfg = markshot::config;
@@ -38,7 +39,9 @@ void ShotWindow::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-    const QPointF imagePoint = widgetToImage(event->position());
+    const QPointF imagePoint = m_mode == Mode::Selecting
+        ? selectingPointerImagePoint(event->position())
+        : widgetToImage(event->position());
     const bool startupPointerTool = m_startupTool == StartupTool::ColorPicker
         || m_startupTool == StartupTool::Ruler;
     if (m_mode == Mode::Selecting && startupPointerTool) {
@@ -57,16 +60,21 @@ void ShotWindow::mouseMoveEvent(QMouseEvent *event)
     }
 
     auto selectionLoupeDirty = [this](QPointF hoverPoint) -> QRegion {
-        if (m_frozenFrame.isNull()) {
+        if (!m_selectionLoupeEnabled || m_frozenFrame.isNull()) {
             return {};
         }
+        const QPointF widgetPoint = imageToWidget(hoverPoint);
         const SelectionLoupeLayout layout =
-            selectionLoupeLayout(imageToWidget(hoverPoint),
+            selectionLoupeLayout(widgetPoint,
                                  size(),
                                  m_startupColorLoupeSize,
                                  hoverPoint,
                                  m_frozenFrame.size());
-        return QRegion(selectionLoupeDirtyRect(layout));
+        QRegion dirty(selectionLoupeDirtyRect(layout));
+        if (m_selectionPointerDetached) {
+            dirty |= QRegion(selectionPointerDirtyRect(widgetPoint));
+        }
+        return dirty;
     };
 
     if (m_mode == Mode::Selecting) {
@@ -74,12 +82,17 @@ void ShotWindow::mouseMoveEvent(QMouseEvent *event)
         if (m_startupHoverValid) {
             dirty |= selectionLoupeDirty(m_startupHoverImagePoint);
         }
-        if (m_frozenImageRect.contains(event->position()) || m_dragging) {
+        const bool followHardware = !m_selectionPointerDetached
+            || hardwarePointerMoved(m_selectionPointerHardwareAnchor,
+                                    event->position().toPoint());
+        if (followHardware && (m_frozenImageRect.contains(event->position()) || m_dragging)) {
             m_startupHoverImagePoint = clampImagePoint(imagePoint);
             m_startupHoverValid = true;
             dirty |= selectionLoupeDirty(m_startupHoverImagePoint);
-        } else {
+        } else if (followHardware) {
             m_startupHoverValid = false;
+        } else if (m_startupHoverValid) {
+            dirty |= selectionLoupeDirty(m_startupHoverImagePoint);
         }
 
         if (!m_dragging) {
@@ -470,7 +483,7 @@ void ShotWindow::mouseReleaseEvent(QMouseEvent *event)
     }
 
     if (m_mode == Mode::Selecting) {
-        const QPointF releasePos = event->position();
+        const QPointF releasePos = imageToWidget(selectingPointerImagePoint(event->position()));
         const qreal clickDistance = QLineF(m_selectionClickStart, releasePos).length();
         if (clickDistance < 5.0 && m_hoveredWindowRect.has_value()) {
             m_selection = QRectF(*m_hoveredWindowRect);
@@ -490,6 +503,7 @@ void ShotWindow::mouseReleaseEvent(QMouseEvent *event)
                 return;
             }
             m_mode = Mode::Editing;
+            attachSelectionPointer();
             m_fullscreenAnnotation = false;
             m_toolbarUserPlaced = false;
             m_actionToolbarUserPlaced = false;
@@ -520,6 +534,7 @@ void ShotWindow::mouseReleaseEvent(QMouseEvent *event)
             return;
         }
         m_mode = Mode::Editing;
+        attachSelectionPointer();
         m_fullscreenAnnotation = false;
         m_toolbarUserPlaced = false;
         m_actionToolbarUserPlaced = false;

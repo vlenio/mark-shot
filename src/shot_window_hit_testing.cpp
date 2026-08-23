@@ -14,6 +14,11 @@ void ShotWindow::updateCursor()
         return;
     }
 
+    if (m_mode == Mode::Selecting && m_selectionPointerDetached) {
+        setCursor(Qt::BlankCursor);
+        return;
+    }
+
     if (m_showWheelPreview && m_wheelPreviewTimer.isValid() && m_wheelPreviewTimer.elapsed() <= 900) {
         setCursor(Qt::BlankCursor);
         return;

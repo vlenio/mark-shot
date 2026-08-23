@@ -50,4 +50,14 @@ bool isSelectionCursorNudgeKey(int key)
         || key == Qt::Key_Up || key == Qt::Key_Down;
 }
 
+bool cursorReachedWarpTarget(QPoint requested, QPoint actual)
+{
+    return (actual - requested).manhattanLength() <= 1;
+}
+
+bool hardwarePointerMoved(QPoint anchor, QPoint current)
+{
+    return (current - anchor).manhattanLength() > 1;
+}
+
 }  // namespace markshot::shot

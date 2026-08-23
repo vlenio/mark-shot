@@ -44,12 +44,14 @@ QVector<markshot::startup_hint::ShortcutHintItem> ShotWindow::startupShortcutHin
 
     QVector<markshot::startup_hint::ShortcutHintItem> items = {
         {MS_TR("Drag"), MS_TR("Select screenshot region"), InputIcon::Mouse},
-        {MS_TR("Arrow keys"), MS_TR("Nudge cursor"), InputIcon::Keyboard},
-        {shortcutTextOr(m_startupColorPickerShortcut, QStringLiteral("C")), MS_TR("Pick color"), InputIcon::Keyboard},
-        {shortcutTextOr(m_startupRulerShortcut, QStringLiteral("R")), MS_TR("Measure size"), InputIcon::Keyboard},
-        {shortcutTextOr(m_startupCodeScannerShortcut, QStringLiteral("Q")), MS_TR("Scan QR or barcode"), InputIcon::Keyboard},
-        {shortcutTextOr(m_startupDisplayCaptureShortcut, QStringLiteral("D")), MS_TR("Quick display capture"), InputIcon::Keyboard},
     };
+    if (m_selectionLoupeEnabled) {
+        items.append({MS_TR("Arrow keys"), MS_TR("Nudge cursor"), InputIcon::Keyboard});
+    }
+    items.append({shortcutTextOr(m_startupColorPickerShortcut, QStringLiteral("C")), MS_TR("Pick color"), InputIcon::Keyboard});
+    items.append({shortcutTextOr(m_startupRulerShortcut, QStringLiteral("R")), MS_TR("Measure size"), InputIcon::Keyboard});
+    items.append({shortcutTextOr(m_startupCodeScannerShortcut, QStringLiteral("Q")), MS_TR("Scan QR or barcode"), InputIcon::Keyboard});
+    items.append({shortcutTextOr(m_startupDisplayCaptureShortcut, QStringLiteral("D")), MS_TR("Quick display capture"), InputIcon::Keyboard});
     if (!activeRecordingAvailable()) {
         items.append({shortcutTextOr(m_startupGifRecorderShortcut, QStringLiteral("G")),
                       MS_TR("Record GIF"),
@@ -424,13 +426,15 @@ void ShotWindow::paintEvent(QPaintEvent *event)
     }
 
     drawStartupToolOverlay(painter);
-    if (m_mode == Mode::Selecting
+    if (m_selectionLoupeEnabled
+        && m_mode == Mode::Selecting
         && m_startupHoverValid
         && m_startupTool != StartupTool::ColorPicker
         && m_startupTool != StartupTool::Ruler
         && !m_frozenFrame.isNull()) {
+        const QPointF widgetPoint = imageToWidget(m_startupHoverImagePoint);
         const SelectionLoupeLayout layout =
-            selectionLoupeLayout(imageToWidget(m_startupHoverImagePoint),
+            selectionLoupeLayout(widgetPoint,
                                  size(),
                                  m_startupColorLoupeSize,
                                  m_startupHoverImagePoint,
@@ -439,6 +443,9 @@ void ShotWindow::paintEvent(QPaintEvent *event)
                                     .arg(qRound(m_startupHoverImagePoint.x()))
                                     .arg(qRound(m_startupHoverImagePoint.y()));
         drawSelectionLoupe(painter, m_frozenFrame, layout, caption);
+        if (m_selectionPointerDetached) {
+            drawSelectionPointer(painter, widgetPoint);
+        }
     }
     drawStartupShortcutHint(painter);
     drawActiveRecordingStatus(painter);
@@ -522,11 +529,12 @@ void ShotWindow::mousePressEvent(QMouseEvent *event)
             return;
         }
 
-        const QPointF imagePoint = clampImagePoint(widgetToImage(event->position()));
+        const QPointF imagePoint = clampImagePoint(selectingPointerImagePoint(event->position()));
         m_startupHoverImagePoint = imagePoint;
         m_startupHoverValid = true;
         if (m_startupTool == StartupTool::ColorPicker) {
-            showStartupColorDialog(sampledImageColor(imagePoint), event->pos());
+            showStartupColorDialog(sampledImageColor(imagePoint),
+                                   imageToWidget(imagePoint).toPoint());
             update();
             event->accept();
             return;
@@ -577,7 +585,9 @@ void ShotWindow::mousePressEvent(QMouseEvent *event)
         return;
     }
 
-    const QPointF imagePoint = widgetToImage(event->position());
+    const QPointF imagePoint = m_mode == Mode::Selecting
+        ? selectingPointerImagePoint(event->position())
+        : widgetToImage(event->position());
     if (m_openWithPanel && m_openWithPanel->isVisible()
         && !m_openWithPanel->geometry().contains(event->pos())
         && (!m_actionToolbar || !m_actionToolbar->geometry().contains(event->pos()))
@@ -628,7 +638,7 @@ void ShotWindow::mousePressEvent(QMouseEvent *event)
         if (m_colorPalette) {
             m_colorPalette->hide();
         }
-        m_selectionClickStart = event->position();
+        m_selectionClickStart = imageToWidget(imagePoint);
         beginSelection(imagePoint);
         return;
     }

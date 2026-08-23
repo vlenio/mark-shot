@@ -31,4 +31,20 @@ QPointF nudgeSelectionCursor(QPointF imagePoint, QPoint delta, QRectF imageBound
  */
 bool isSelectionCursorNudgeKey(int key);
 
+/**
+ * 判断 QCursor::setPos 是否把系统光标送到了目标点。
+ * @param requested 请求的全局坐标。
+ * @param actual setPos 之后读到的全局坐标。
+ * @return 到达目标时返回 true。
+ */
+bool cursorReachedWarpTarget(QPoint requested, QPoint actual);
+
+/**
+ * 判断硬件光标是否已离开分离时的锚点。
+ * @param anchor 分离时光标的窗口坐标。
+ * @param current 当前硬件光标的窗口坐标。
+ * @return 明显移动时返回 true。
+ */
+bool hardwarePointerMoved(QPoint anchor, QPoint current);
+
 }  // namespace markshot::shot

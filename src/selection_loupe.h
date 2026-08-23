@@ -52,4 +52,19 @@ void drawSelectionLoupe(QPainter &painter,
                         const SelectionLoupeLayout &layout,
                         const QString &caption);
 
+/**
+ * 在逻辑光标位置绘制与系统十字光标一致的软件指针。
+ * @param painter 当前绘制器。
+ * @param widgetPoint 逻辑光标的窗口坐标。
+ * @return 无返回值。
+ */
+void drawSelectionPointer(QPainter &painter, QPointF widgetPoint);
+
+/**
+ * 返回软件指针需要重绘的窗口区域。
+ * @param widgetPoint 逻辑光标的窗口坐标。
+ * @return 包含十字线余量的脏区。
+ */
+QRect selectionPointerDirtyRect(QPointF widgetPoint);
+
 }  // namespace markshot::shot

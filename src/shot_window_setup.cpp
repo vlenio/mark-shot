@@ -1,6 +1,7 @@
 #include "shot_window_module.h"
 
 #include "app_config_store.h"
+#include "selection_loupe_config.h"
 
 namespace cfg = markshot::config;
 namespace shortcuts = markshot::shortcut;
@@ -105,6 +106,7 @@ ShotWindow::ShotWindow(QImage frozenFrame,
     if (appConfigOk) {
         m_toolbarAppearance = markshot::toolbarAppearanceFromConfigRoot(appConfigRoot);
         m_doubleClickAction = markshot::captureDoubleClickActionFromConfigRoot(appConfigRoot);
+        m_selectionLoupeEnabled = markshot::selectionLoupeEnabledFromConfigRoot(appConfigRoot);
     }
     // 在初始化 UI 之前先加载上次会话的工具默认值,使后续 toolbar/属性面板按
     // 持久化的状态显示;loadAnnotationStateFromDisk 仅修改 m_* 默认值字段,

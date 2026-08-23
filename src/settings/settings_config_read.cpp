@@ -8,6 +8,7 @@
 #include "kde_capture_config.h"
 #include "recording/recording_storage_config.h"
 #include "save_path_config.h"
+#include "selection_loupe_config.h"
 #include "settings/provider_preference_config.h"
 #include "startup_config.h"
 #include "toolbar_appearance_config.h"
@@ -553,6 +554,7 @@ SettingsConfig readSettingsConfig(QString *error)
     settings.capture.kdeKwinScreenshotEnabled = kdeKWinScreenshotEnabledFromConfigRoot(root);
     settings.capture.hideOwnWindows = hideOwnWindowsDuringCaptureFromConfigRoot(root);
     settings.capture.doubleClickAction = captureDoubleClickActionFromConfigRoot(root);
+    settings.capture.selectionLoupeEnabled = selectionLoupeEnabledFromConfigRoot(root);
     settings.shortcuts = readShortcutSettings();
     settings.annotation = readAnnotationSettings(root);
     settings.pinned = readPinnedSettings(root);

@@ -47,6 +47,9 @@ SettingsPageCapture::SettingsPageCapture(QWidget *parent)
                                  static_cast<int>(CaptureDoubleClickAction::Pin));
     m_doubleClickAction->addItem(MS_TR("Cancel Capture"),
                                  static_cast<int>(CaptureDoubleClickAction::Cancel));
+    m_selectionLoupe = addSwitchRow(form,
+                                    MS_TR("Selection Loupe"),
+                                    MS_TR("Show a magnifier near the cursor and nudge the pointer with arrow keys."));
     layout->addWidget(captureCard);
     layout->addStretch();
 }
@@ -61,6 +64,7 @@ void SettingsPageCapture::setConfig(const SettingsConfig &config)
     const int doubleClickIndex =
         m_doubleClickAction->findData(static_cast<int>(config.capture.doubleClickAction));
     m_doubleClickAction->setCurrentIndex(doubleClickIndex >= 0 ? doubleClickIndex : 0);
+    m_selectionLoupe->setChecked(config.capture.selectionLoupeEnabled);
 }
 
 void SettingsPageCapture::updateConfig(SettingsConfig *config) const
@@ -76,6 +80,7 @@ void SettingsPageCapture::updateConfig(SettingsConfig *config) const
     config->capture.hideOwnWindows = m_hideOwnWindows->isChecked();
     config->capture.doubleClickAction =
         static_cast<CaptureDoubleClickAction>(m_doubleClickAction->currentData().toInt());
+    config->capture.selectionLoupeEnabled = m_selectionLoupe->isChecked();
 }
 
 }  // namespace markshot::settings

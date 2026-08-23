@@ -164,6 +164,11 @@ void writeCaptureSettings(QJsonObject *root, const CaptureSettings &settings)
                    settings.hideOwnWindows);
     setNestedValue(root, {QStringLiteral("capture"), QStringLiteral("doubleClickAction")},
                    captureDoubleClickActionName(settings.doubleClickAction));
+    setNestedValue(root,
+                   {QStringLiteral("capture"),
+                    QStringLiteral("selectionLoupe"),
+                    QStringLiteral("enabled")},
+                   settings.selectionLoupeEnabled);
 }
 
 /// @brief 写入快捷键设置。

@@ -6,6 +6,7 @@
 #include <QImage>
 #include <QKeySequence>
 #include <QPointer>
+#include <QPoint>
 #include <QPointF>
 #include <QRegion>
 #include <QRect>
@@ -168,6 +169,9 @@ private:
     void flushInitialSelectionRepaint();
     QRegion initialSelectionDirtyRegion(const QRectF &previousSelection,
                                         bool previousSelectionUsable) const;
+    QPointF selectingPointerImagePoint(QPointF widgetPos);
+    void attachSelectionPointer();
+    void detachSelectionPointerIfWarpFailed(QPoint widgetPoint);
 
     // High-level interaction mode: first pick a capture region, then edit the
     // selected image area and its annotations.
@@ -637,6 +641,9 @@ private:
     bool m_startupRulerHasMeasure = false;
     qreal m_startupColorLoupeSize = 112.0;
     QPointF m_startupHoverImagePoint;
+    bool m_selectionLoupeEnabled = false;
+    bool m_selectionPointerDetached = false;
+    QPoint m_selectionPointerHardwareAnchor;
     QPointF m_startupRulerStart;
     QPointF m_startupRulerEnd;
     QImage m_sharpViewportCache;
