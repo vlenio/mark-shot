@@ -22,11 +22,6 @@ jobs:
       image: ubuntu:26.04
 
     steps:
-      - name: Check out packaging
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          fetch-depth: 0
-
       - name: Install packaging tools
         run: |
           apt-get update
@@ -37,6 +32,11 @@ jobs:
             equivs \
             git \
             lintian
+
+      - name: Check out packaging
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
 
       - name: Install declared build dependencies
         run: |
