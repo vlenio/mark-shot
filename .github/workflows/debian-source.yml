@@ -49,6 +49,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           DEBIAN_VERSION="$(dpkg-parsechangelog -SVersion)"
           UPSTREAM_VERSION="${DEBIAN_VERSION%%-*}"
           TAG="v${UPSTREAM_VERSION}"
