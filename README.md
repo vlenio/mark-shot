@@ -378,7 +378,7 @@ For other distributions (such as Debian, Ubuntu, or Fedora), download the compil
   sudo dnf install ./mark-shot-<version>-1.x86_64.rpm
   ```
 
-See the [Linux package selection guide](docs/linux-packages.md) for Debian 12, Debian 13, Ubuntu 24.04, Ubuntu 26.04, AppImage, and Fedora artifact names and compatibility baselines.
+See the [Linux package selection guide](docs/linux-packages.md) for Debian 12, Debian 13, Ubuntu 24.04, Ubuntu 26.04, AppImage, and Fedora artifact names and compatibility baselines. Maintainers can use the [Ubuntu source packaging and community PPA guide](docs/ubuntu-packaging.md) to build and verify the conventional Resolute source package.
 
 Plugin notes:
 - Packages include C++ provider plugins only when their build deps (onnxruntime, zxing-cpp, …) are present on the builder.
