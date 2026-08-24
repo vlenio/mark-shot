@@ -7,6 +7,8 @@ for desktop in /usr/share/applications/mark-shot.desktop \
                /usr/share/applications/net.local.mark-shot.desktop; do
     desktop-file-validate "$desktop"
 done
+pycache_dir="$(mktemp -d)"
+trap 'rm -rf "$pycache_dir"' EXIT HUP INT TERM
 for helper in /usr/bin/mark-shot-ocr \
               /usr/bin/mark-shot-code-scan \
               /usr/bin/mark-shot-translate \
@@ -15,7 +17,7 @@ for helper in /usr/bin/mark-shot-ocr \
               /usr/bin/mark-shot-window-detection-hyprland \
               /usr/bin/mark-shot-window-detection-gnome \
               /usr/bin/mark-shot-window-detection-kde; do
-    python3 -m py_compile "$helper"
+    PYTHONPYCACHEPREFIX="$pycache_dir" python3 -m py_compile "$helper"
 done
 test -f /usr/share/gnome-shell/extensions/mark-shot-scroll-helper@snemc.org/metadata.json
 test -f /usr/lib/mark-shot/libmark-shot-layer-shell.so
