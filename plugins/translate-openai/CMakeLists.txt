@@ -16,6 +16,7 @@ target_include_directories(mark-shot-translate-openai PRIVATE
 )
 target_link_libraries(mark-shot-translate-openai
     PRIVATE
+        mark-shot-translate-common
         Qt6::Core
         Qt6::Network
 )

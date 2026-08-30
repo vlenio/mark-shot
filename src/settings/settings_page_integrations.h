@@ -1,5 +1,6 @@
 #pragma once
 
+#include "settings/settings_cloud_translate_card.h"
 #include "settings/settings_config.h"
 
 #include <QWidget>
@@ -47,6 +48,7 @@ private:
     QLineEdit *m_translationModel = nullptr;
     QDoubleSpinBox *m_translationTemperature = nullptr;
     QPlainTextEdit *m_translationSystemPrompt = nullptr;
+    CloudTranslateCardWidgets m_cloudTranslate;
 };
 
 }  // namespace markshot::settings

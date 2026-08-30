@@ -328,6 +328,13 @@ void writeIntegrationSettings(QJsonObject *root, const IntegrationSettings &sett
                    std::clamp(settings.translationTemperature, 0.0, 2.0));
     setNestedValue(root, {QStringLiteral("translation"), QStringLiteral("systemPrompt")},
                    settings.translationSystemPrompt);
+
+    // 1. 云翻译凭据按 translation.<vendor> 子节写入，与各厂商插件的读取路径一致
+    const QVector<QPair<QStringList, QString>> cloudEntries =
+        cloudTranslateConfigEntries(settings.cloudTranslate);
+    for (const QPair<QStringList, QString> &entry : cloudEntries) {
+        setNestedValue(root, entry.first, entry.second);
+    }
 }
 
 /// @brief 写入高级运行时设置。

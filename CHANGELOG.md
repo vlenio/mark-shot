@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.50 - 2026-08-30
+
+### Features & Enhancements
+
+- **Tencent, Baidu, and Youdao Translation**: OCR translation is no longer limited to OpenAI-compatible endpoints. Three provider plugins ship alongside it — `tencent-tmt` (Tencent Cloud API 3.0, TC3-HMAC-SHA256), `baidu-fanyi` (Baidu general text translation, MD5 signature), and `youdao-nmt` (Youdao text translation, v3 signature). Credentials are entered on the Integrations settings page or read from environment variables, and the provider is selected through `translation.provider` or the Plugins settings page. See [docs/translation-providers.md](docs/translation-providers.md).
+- **Shared Translation Plugin Infrastructure**: Config lookup, synchronous HTTP, language-name normalization, and character-budget batching moved into a shared layer that all four translation plugins use, replacing what would otherwise be four copies of the config path search.
+- **Deterministic Provider Auto-selection**: With four translation plugins installed, the `auto` chain now sorts candidates by a fixed order (`openai-compatible`, `tencent-tmt`, `baidu-fanyi`, `youdao-nmt`) instead of taking whichever plugin the registry happened to load first, so existing configurations keep resolving to the same provider.
+- **Debian and Ubuntu Source Packaging**: Conventional Debian source packaging under `debian/`, an Ubuntu 26.04 Resolute source and binary validation workflow, and an optional Launchpad PPA publication workflow. See [docs/ubuntu-packaging.md](docs/ubuntu-packaging.md).
+
+### Bug Fixes
+
+- **Batch Translation Alignment**: Translation responses whose segment count does not match the request are rejected outright. A vendor-side mismatch surfaces as an error instead of silently shifting translated text between segments.
+- **Qt 6.2 Compatibility**: The Tencent signer used `QTimeZone::UTC`, which requires Qt 6.5 and broke builds against the Qt 6.2 baseline.
+
 ## 0.1.49 - 2026-08-23
 
 ### Features & Enhancements

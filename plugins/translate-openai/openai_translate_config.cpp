@@ -1,142 +1,29 @@
 #include "openai_translate_config.h"
 
-#include <QDir>
-#include <QFile>
-#include <QFileInfo>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QProcessEnvironment>
-#include <QStandardPaths>
-
-#include <algorithm>
+#include "translate_config_source.h"
 
 namespace markshot::translate_openai {
 namespace {
 
-/**
- * 读取去除空白后的环境变量。
- * @param env 环境变量集合。
- * @param name 变量名。
- * @return 变量值。
- */
-QString envValue(const QProcessEnvironment &env, const QString &name)
-{
-    return env.value(name).trimmed();
-}
+using markshot::translate_common::TranslateConfigSource;
 
 /**
- * 读取首个非空字符串。
- * @param configValue 配置文件取值。
- * @param env 环境变量集合。
- * @param envNames 环境变量候选名。
- * @param fallback 兜底值。
- * @return 解析后的取值。
+ * 读取配置来源中的浮点数取值。
+ * @param source 配置来源。
+ * @param key 配置键名。
+ * @param fallback 缺失时的默认值。
+ * @return 厂商子节优先、公共节兜底的浮点取值。
  */
-QString firstNonEmpty(const QString &configValue,
-                      const QProcessEnvironment &env,
-                      const QStringList &envNames,
-                      const QString &fallback)
+double configDouble(const TranslateConfigSource &source, const QString &key, double fallback)
 {
-    if (!configValue.trimmed().isEmpty()) {
-        return configValue.trimmed();
+    double value = fallback;
+    if (source.translation.contains(key)) {
+        value = source.translation.value(key).toDouble(value);
     }
-    for (const QString &name : envNames) {
-        const QString value = envValue(env, name);
-        if (!value.isEmpty()) {
-            return value;
-        }
+    if (source.vendor.contains(key)) {
+        value = source.vendor.value(key).toDouble(value);
     }
-    return fallback;
-}
-
-/**
- * 追加配置文件候选路径。
- * @param paths 路径列表。
- * @param path 待追加路径。
- * @return 无返回值。
- */
-void addConfigPath(QStringList *paths, const QString &path)
-{
-    const QString trimmed = path.trimmed();
-    if (!trimmed.isEmpty() && !paths->contains(trimmed)) {
-        paths->append(trimmed);
-    }
-}
-
-/**
- * 追加配置目录候选路径。
- * @param paths 路径列表。
- * @param dir 配置目录。
- * @return 无返回值。
- */
-void addConfigDir(QStringList *paths, const QString &dir)
-{
-    if (!dir.trimmed().isEmpty()) {
-        addConfigPath(paths, QDir(dir).filePath(QStringLiteral("config.json")));
-    }
-}
-
-#if defined(Q_OS_WIN)
-/**
- * 按 Windows 环境变量构造配置目录。
- * @param env 环境变量集合。
- * @param name 变量名。
- * @param relativePath 相对路径。
- * @return 配置目录。
- */
-QString windowsConfigDir(const QProcessEnvironment &env,
-                         const QString &name,
-                         const QString &relativePath = QStringLiteral("mark-shot"))
-{
-    const QString root = envValue(env, name);
-    return root.isEmpty() ? QString() : QDir(root).filePath(relativePath);
-}
-#endif
-
-/**
- * 读取配置文件候选路径。
- * @param env 环境变量集合。
- * @return 候选配置文件路径列表。
- */
-QStringList configPathCandidates(const QProcessEnvironment &env)
-{
-    QStringList paths;
-    addConfigPath(&paths, envValue(env, QStringLiteral("MARK_SHOT_CONFIG")));
-
-#if defined(Q_OS_WIN)
-    addConfigDir(&paths, windowsConfigDir(env, QStringLiteral("LOCALAPPDATA")));
-    addConfigDir(&paths, windowsConfigDir(env, QStringLiteral("APPDATA")));
-    addConfigDir(&paths,
-                 windowsConfigDir(env, QStringLiteral("USERPROFILE"), QStringLiteral("AppData/Local/mark-shot")));
-#endif
-
-    const QString appConfig = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    addConfigDir(&paths, appConfig);
-
-    const QString genericConfig = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
-    addConfigDir(&paths, QDir(genericConfig).filePath(QStringLiteral("mark-shot")));
-    addConfigDir(&paths, QDir::home().filePath(QStringLiteral(".config/mark-shot")));
-    return paths;
-}
-
-/**
- * 读取应用配置中的 translation 对象。
- * @param env 环境变量集合。
- * @return translation JSON 对象，读取失败时为空对象。
- */
-QJsonObject readTranslationConfig(const QProcessEnvironment &env)
-{
-    for (const QString &path : configPathCandidates(env)) {
-        QFile file(path);
-        if (!QFileInfo::exists(path) || !file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            continue;
-        }
-        const QJsonDocument document = QJsonDocument::fromJson(file.readAll());
-        if (document.isObject()) {
-            return document.object().value(QStringLiteral("translation")).toObject();
-        }
-    }
-    return {};
+    return value;
 }
 
 }  // namespace
@@ -149,41 +36,48 @@ QString defaultSystemPrompt()
 
 OpenAiTranslateConfig readOpenAiTranslateConfig()
 {
-    const QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    const QJsonObject config = readTranslationConfig(env);
+    const TranslateConfigSource source =
+        markshot::translate_common::readTranslateConfigSource(QStringLiteral("openai"));
 
     OpenAiTranslateConfig result;
-    result.apiBase = firstNonEmpty(
-        config.value(QStringLiteral("apiBase")).toString(config.value(QStringLiteral("baseUrl")).toString()),
-        env,
-        {QStringLiteral("MARK_SHOT_LLM_API_BASE"),
-         QStringLiteral("OPENAI_BASE_URL"),
-         QStringLiteral("OPENAI_API_BASE")},
-        result.apiBase);
-    result.model = firstNonEmpty(config.value(QStringLiteral("model")).toString(),
-                                 env,
-                                 {QStringLiteral("MARK_SHOT_LLM_MODEL"), QStringLiteral("OPENAI_MODEL")},
-                                 result.model);
-    result.apiKeyEnv = firstNonEmpty(config.value(QStringLiteral("apiKeyEnv")).toString(),
-                                     env,
-                                     {},
-                                     result.apiKeyEnv);
-    result.apiKey = firstNonEmpty(config.value(QStringLiteral("apiKey")).toString(),
-                                  env,
-                                  {result.apiKeyEnv, QStringLiteral("MARK_SHOT_LLM_API_KEY")},
-                                  {});
-    result.systemPrompt = firstNonEmpty(config.value(QStringLiteral("systemPrompt")).toString(),
-                                        env,
-                                        {},
-                                        defaultSystemPrompt());
-    if (config.contains(QStringLiteral("temperature"))) {
-        result.temperature = config.value(QStringLiteral("temperature")).toDouble(result.temperature);
+
+    // 1. apiBase 兼容旧配置使用的 baseUrl 键名
+    QString apiBase = markshot::translate_common::configString(source, QStringLiteral("apiBase"), {});
+    if (apiBase.isEmpty()) {
+        apiBase = markshot::translate_common::configString(source,
+                                                           QStringLiteral("baseUrl"),
+                                                           {QStringLiteral("MARK_SHOT_LLM_API_BASE"),
+                                                            QStringLiteral("OPENAI_BASE_URL"),
+                                                            QStringLiteral("OPENAI_API_BASE")},
+                                                           result.apiBase);
     }
-    if (config.contains(QStringLiteral("timeoutMs"))) {
-        result.timeoutMs = std::clamp(config.value(QStringLiteral("timeoutMs")).toInt(result.timeoutMs),
-                                      1000,
-                                      300000);
-    }
+    result.apiBase = apiBase;
+
+    result.model = markshot::translate_common::configString(
+        source,
+        QStringLiteral("model"),
+        {QStringLiteral("MARK_SHOT_LLM_MODEL"), QStringLiteral("OPENAI_MODEL")},
+        result.model);
+
+    // 2. apiKeyEnv 决定密钥从哪个环境变量读取，需先于 apiKey 解析
+    result.apiKeyEnv =
+        markshot::translate_common::configString(source, QStringLiteral("apiKeyEnv"), {}, result.apiKeyEnv);
+    result.apiKey = markshot::translate_common::configString(
+        source,
+        QStringLiteral("apiKey"),
+        {result.apiKeyEnv, QStringLiteral("MARK_SHOT_LLM_API_KEY")},
+        {});
+
+    result.systemPrompt = markshot::translate_common::configString(source,
+                                                                   QStringLiteral("systemPrompt"),
+                                                                   {},
+                                                                   defaultSystemPrompt());
+    result.temperature = configDouble(source, QStringLiteral("temperature"), result.temperature);
+    result.timeoutMs = markshot::translate_common::configInt(source,
+                                                             QStringLiteral("timeoutMs"),
+                                                             result.timeoutMs,
+                                                             1000,
+                                                             300000);
     return result;
 }
 

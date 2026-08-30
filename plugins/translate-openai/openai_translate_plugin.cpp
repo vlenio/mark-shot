@@ -2,16 +2,12 @@
 
 #include "openai_translate_config.h"
 #include "openai_translation_parser.h"
+#include "translate_http_client.h"
 
-#include <QEventLoop>
 #include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QNetworkRequest>
-#include <QTimer>
 
 namespace markshot::translate_openai {
 namespace {
@@ -117,47 +113,29 @@ bool postTranslationRequest(const OpenAiTranslateConfig &config,
                             QByteArray *body,
                             QString *error)
 {
-    QNetworkAccessManager network;
-    QNetworkRequest request(chatCompletionsUrl(config.apiBase));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
-    request.setRawHeader(QByteArrayLiteral("Authorization"), "Bearer " + config.apiKey.toUtf8());
+    markshot::translate_common::TranslateHttpRequest request;
+    request.url = chatCompletionsUrl(config.apiBase);
+    request.contentType = QByteArrayLiteral("application/json");
+    request.headers.append({QByteArrayLiteral("Authorization"), "Bearer " + config.apiKey.toUtf8()});
+    request.body = payload;
+    request.timeoutMs = config.timeoutMs;
 
-    QEventLoop loop;
-    QTimer timeoutTimer;
-    timeoutTimer.setSingleShot(true);
-    QNetworkReply *reply = network.post(request, payload);
-    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    QObject::connect(&timeoutTimer, &QTimer::timeout, &loop, [&loop, reply] {
-        // 1. 超时后中断网络请求并退出局部事件循环
-        reply->abort();
-        loop.quit();
-    });
-    timeoutTimer.start(config.timeoutMs);
-    loop.exec();
-
-    const bool timedOut = !timeoutTimer.isActive();
-    timeoutTimer.stop();
-    const QByteArray responseBody = reply->readAll();
-    const QNetworkReply::NetworkError replyError = reply->error();
-    const int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    reply->deleteLater();
-
-    if (timedOut) {
-        if (error) {
-            *error = QStringLiteral("llm request timed out");
-        }
+    markshot::translate_common::TranslateHttpResponse response;
+    if (!markshot::translate_common::sendTranslateHttpRequest(request, &response, error)) {
         return false;
     }
-    if (replyError != QNetworkReply::NoError) {
+
+    // 1. chat/completions 用 HTTP 状态码表达失败，非 2xx 一律视为调用出错
+    if (response.httpStatus < 200 || response.httpStatus >= 300) {
         if (error) {
             *error = QStringLiteral("llm http %1: %2")
-                         .arg(httpStatus)
-                         .arg(QString::fromUtf8(responseBody.left(500)));
+                         .arg(response.httpStatus)
+                         .arg(QString::fromUtf8(response.body.left(500)));
         }
         return false;
     }
     if (body) {
-        *body = responseBody;
+        *body = response.body;
     }
     return true;
 }

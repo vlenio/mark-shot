@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(mark-shot VERSION 0.1.49 LANGUAGES C CXX)
+project(mark-shot VERSION 0.1.50 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -406,7 +406,11 @@ include(cmake/pipewire_capture_target.cmake)
 
 # provider 插件：可选构建，依赖缺失时各自跳过；需在测试注册前定义 target
 add_subdirectory(plugins/ocr-rapid)
+add_subdirectory(plugins/translate-common)
 add_subdirectory(plugins/translate-openai)
+add_subdirectory(plugins/translate-tencent)
+add_subdirectory(plugins/translate-baidu)
+add_subdirectory(plugins/translate-youdao)
 add_subdirectory(plugins/code-scan-zxing)
 
 include(CTest)

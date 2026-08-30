@@ -1,5 +1,12 @@
 # Release Notes
 
+### 0.1.50
+
+- **Tencent, Baidu, and Youdao Translation**: OCR translation now works with three Chinese machine translation services besides OpenAI-compatible endpoints. Enter credentials in Settings -> Integrations or through environment variables, and pick the service in Settings -> Plugins. See the [translation provider guide](translation-providers.md).
+- **Deterministic Provider Selection**: With several translation plugins installed, `auto` resolves in a fixed order instead of depending on plugin load order, so existing setups keep using the same service.
+- **Debian and Ubuntu Source Packaging**: Conventional Debian source packaging with an Ubuntu 26.04 Resolute validation workflow and an optional Launchpad PPA publication workflow.
+- **Segment Alignment**: A translation response whose segment count does not match the request is rejected, so mismatched vendor output surfaces as an error rather than shifting text between segments.
+
 ### 0.1.49
 
 - **Selection Loupe**: Optional magnifier and arrow-key pointer nudge while picking a region. Off by default; enable it in Settings -> Capture or with `capture.selectionLoupe.enabled`. On Wayland the logical pointer is used when the compositor cannot warp the system cursor.
