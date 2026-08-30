@@ -1,7 +1,10 @@
 # 网易有道智云文本翻译插件：复用 translate-common 的配置、HTTP 与分批能力
 
-qt_add_plugin(mark-shot-translate-youdao
-    SHARED
+# qt_add_plugin 在 Qt 6.2 会忽略位置参数形式的源文件列表，链接出没有插件符号的空库，
+# 源文件必须用 target_sources 显式添加
+qt_add_plugin(mark-shot-translate-youdao SHARED)
+
+target_sources(mark-shot-translate-youdao PRIVATE
     youdao_translate_config.cpp
     youdao_translate_config.h
     youdao_translate_plugin.cpp

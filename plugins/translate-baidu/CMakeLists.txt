@@ -1,7 +1,10 @@
 # 百度翻译插件：复用翻译共享层，按开放平台签名协议调用通用翻译接口
 
-qt_add_plugin(mark-shot-translate-baidu
-    SHARED
+# qt_add_plugin 在 Qt 6.2 会忽略位置参数形式的源文件列表，链接出没有插件符号的空库，
+# 源文件必须用 target_sources 显式添加
+qt_add_plugin(mark-shot-translate-baidu SHARED)
+
+target_sources(mark-shot-translate-baidu PRIVATE
     baidu_translate_config.cpp
     baidu_translate_config.h
     baidu_translate_plugin.cpp

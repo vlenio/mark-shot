@@ -20,8 +20,11 @@ if(NOT TARGET ZXing::ZXing AND NOT TARGET PkgConfig::ZXingCpp AND NOT TARGET Pkg
     return()
 endif()
 
-qt_add_plugin(mark-shot-code-scan-zxing
-    SHARED
+# qt_add_plugin 在 Qt 6.2 会忽略位置参数形式的源文件列表，链接出没有插件符号的空库，
+# 源文件必须用 target_sources 显式添加
+qt_add_plugin(mark-shot-code-scan-zxing SHARED)
+
+target_sources(mark-shot-code-scan-zxing PRIVATE
     zxing_code_scan_plugin.cpp
     zxing_code_scan_plugin.h
 )
