@@ -62,8 +62,11 @@ install -Dm644 README.md "$PACKAGE_DIR/usr/share/doc/mark-shot/README.md"
 install -Dm644 README.zh-CN.md "$PACKAGE_DIR/usr/share/doc/mark-shot/README.zh-CN.md"
 install -d "$CONTROL_DIR"
 
-mkdir -p debian
-cat > debian/control <<'EOF'
+# dpkg-shlibdeps expects debian/control. Keep the conventional in-tree source
+# packaging intact; only create a minimal fallback for old source snapshots.
+if [[ ! -f debian/control ]]; then
+    mkdir -p debian
+    cat > debian/control <<'EOF'
 Source: mark-shot
 Section: graphics
 Priority: optional
@@ -77,6 +80,7 @@ Depends: ${shlibs:Depends}
 Description: Qt 6 screenshot selection and annotation tool
  Mark Shot captures screenshots and annotates image regions.
 EOF
+fi
 
 # 1. 收集主程序与全部 ELF 插件/模块，避免 OCR/layer-shell 的 so 依赖漏出
 SHLIB_ARGS=()
