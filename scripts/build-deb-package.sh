@@ -120,6 +120,15 @@ fi
 if [[ -e "$PACKAGE_DIR/usr/lib/mark-shot/plugins/libmark-shot-translate-openai.so" ]]; then
     PLUGIN_NOTES+=("includes translate-openai plugin")
 fi
+if [[ -e "$PACKAGE_DIR/usr/lib/mark-shot/plugins/libmark-shot-translate-tencent.so" ]]; then
+    PLUGIN_NOTES+=("includes translate-tencent plugin")
+fi
+if [[ -e "$PACKAGE_DIR/usr/lib/mark-shot/plugins/libmark-shot-translate-baidu.so" ]]; then
+    PLUGIN_NOTES+=("includes translate-baidu plugin")
+fi
+if [[ -e "$PACKAGE_DIR/usr/lib/mark-shot/plugins/libmark-shot-translate-youdao.so" ]]; then
+    PLUGIN_NOTES+=("includes translate-youdao plugin")
+fi
 
 if [[ -n "$SHLIB_DEPS" ]]; then
     DEPENDS="${SHLIB_DEPS}, ${MANUAL_DEPS}"
