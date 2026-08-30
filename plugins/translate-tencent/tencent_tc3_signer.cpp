@@ -42,7 +42,8 @@ QByteArray hmacSha256(const QByteArray &key, const QByteArray &message)
 
 QString tc3UtcDate(qint64 timestamp)
 {
-    return QDateTime::fromSecsSinceEpoch(timestamp, QTimeZone::UTC).toString(QStringLiteral("yyyy-MM-dd"));
+    // 1. 用 QTimeZone::utc() 而非 QTimeZone::UTC，后者需要 Qt 6.5 而项目底线是 Qt 6.2
+    return QDateTime::fromSecsSinceEpoch(timestamp, QTimeZone::utc()).toString(QStringLiteral("yyyy-MM-dd"));
 }
 
 QString tc3CredentialScope(qint64 timestamp, const QString &service)
