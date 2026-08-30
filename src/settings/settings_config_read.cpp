@@ -480,6 +480,7 @@ IntegrationSettings readIntegrationSettings(const QJsonObject &root)
                       0.0,
                       2.0);
     settings.translationSystemPrompt = translation.value(QStringLiteral("systemPrompt")).toString();
+    settings.cloudTranslate = readCloudTranslateSettings(translation);
     return settings;
 }
 

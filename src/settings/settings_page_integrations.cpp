@@ -77,6 +77,7 @@ SettingsPageIntegrations::SettingsPageIntegrations(QWidget *parent)
                                                 MS_TR("System Prompt"),
                                                 MS_TR("Optional translation system prompt."));
     layout->addWidget(translationCard);
+    layout->addWidget(createCloudTranslateCard(this, &m_cloudTranslate));
     layout->addStretch();
 }
 
@@ -94,6 +95,7 @@ void SettingsPageIntegrations::setConfig(const SettingsConfig &config)
     m_translationModel->setText(config.integrations.translationModel);
     m_translationTemperature->setValue(config.integrations.translationTemperature);
     m_translationSystemPrompt->setPlainText(config.integrations.translationSystemPrompt);
+    applyCloudTranslateSettings(m_cloudTranslate, config.integrations.cloudTranslate);
     refreshProviderStatus(config);
 }
 
@@ -137,6 +139,7 @@ void SettingsPageIntegrations::updateConfig(SettingsConfig *config) const
     config->integrations.translationModel = m_translationModel->text().trimmed();
     config->integrations.translationTemperature = m_translationTemperature->value();
     config->integrations.translationSystemPrompt = m_translationSystemPrompt->toPlainText();
+    collectCloudTranslateSettings(m_cloudTranslate, &config->integrations.cloudTranslate);
 }
 
 }  // namespace markshot::settings

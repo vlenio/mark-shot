@@ -1,10 +1,14 @@
 set(MARK_SHOT_SETTINGS_SOURCES
+    src/settings/cloud_translate_settings.cpp
+    src/settings/cloud_translate_settings.h
     src/settings/provider_preference_config.cpp
     src/settings/provider_preference_config.h
     src/settings/settings_config.cpp
     src/settings/settings_config.h
     src/settings/settings_config_read.cpp
     src/settings/settings_config_write.cpp
+    src/settings/settings_cloud_translate_card.cpp
+    src/settings/settings_cloud_translate_card.h
     src/settings/settings_design_tokens.cpp
     src/settings/settings_design_tokens.h
     src/settings/settings_dialog.cpp

@@ -4,6 +4,7 @@
 #include "capture_freeze_scope.h"
 #include "clipboard_image_config.h"
 #include "export_image_effect.h"
+#include "settings/cloud_translate_settings.h"
 #include "shortcut_config.h"
 #include "shot_window.h"
 #include "ui/interface_language_config.h"
@@ -104,6 +105,7 @@ struct IntegrationSettings {
     QString translationModel = QStringLiteral("gpt-4o-mini");
     double translationTemperature = 0.2;
     QString translationSystemPrompt;
+    CloudTranslateSettings cloudTranslate;
 };
 
 struct AdvancedSettings {
