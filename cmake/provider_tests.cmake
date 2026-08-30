@@ -122,11 +122,90 @@ if(TARGET mark-shot-translate-openai)
     )
     target_link_libraries(mark-shot-translate-openai-plugin-test
         PRIVATE
+            mark-shot-translate-common
             Qt6::Core
             Qt6::Network
             Qt6::Test
     )
     add_test(NAME translate-openai-plugin COMMAND mark-shot-translate-openai-plugin-test)
+endif()
+
+if(TARGET mark-shot-translate-tencent)
+    qt_add_executable(mark-shot-translate-tencent-plugin-test
+        tests/translate_tencent_plugin_test.cpp
+        plugins/translate-tencent/tencent_tc3_signer.cpp
+        plugins/translate-tencent/tencent_tc3_signer.h
+        plugins/translate-tencent/tencent_translate_config.cpp
+        plugins/translate-tencent/tencent_translate_config.h
+        plugins/translate-tencent/tencent_translate_plugin.cpp
+        plugins/translate-tencent/tencent_translate_plugin.h
+        plugins/translate-tencent/tencent_translate_request.cpp
+        plugins/translate-tencent/tencent_translate_request.h
+    )
+    target_include_directories(mark-shot-translate-tencent-plugin-test PRIVATE
+        plugins/translate-tencent
+        plugin-sdk
+    )
+    target_link_libraries(mark-shot-translate-tencent-plugin-test
+        PRIVATE
+            mark-shot-translate-common
+            Qt6::Core
+            Qt6::Network
+            Qt6::Test
+    )
+    add_test(NAME translate-tencent-plugin COMMAND mark-shot-translate-tencent-plugin-test)
+endif()
+
+if(TARGET mark-shot-translate-baidu)
+    qt_add_executable(mark-shot-translate-baidu-plugin-test
+        tests/translate_baidu_plugin_test.cpp
+        plugins/translate-baidu/baidu_translate_config.cpp
+        plugins/translate-baidu/baidu_translate_config.h
+        plugins/translate-baidu/baidu_translate_plugin.cpp
+        plugins/translate-baidu/baidu_translate_plugin.h
+        plugins/translate-baidu/baidu_translate_request.cpp
+        plugins/translate-baidu/baidu_translate_request.h
+        plugins/translate-baidu/baidu_translate_signer.cpp
+        plugins/translate-baidu/baidu_translate_signer.h
+    )
+    target_include_directories(mark-shot-translate-baidu-plugin-test PRIVATE
+        plugins/translate-baidu
+        plugin-sdk
+    )
+    target_link_libraries(mark-shot-translate-baidu-plugin-test
+        PRIVATE
+            mark-shot-translate-common
+            Qt6::Core
+            Qt6::Network
+            Qt6::Test
+    )
+    add_test(NAME translate-baidu-plugin COMMAND mark-shot-translate-baidu-plugin-test)
+endif()
+
+if(TARGET mark-shot-translate-youdao)
+    qt_add_executable(mark-shot-translate-youdao-plugin-test
+        tests/translate_youdao_plugin_test.cpp
+        plugins/translate-youdao/youdao_translate_config.cpp
+        plugins/translate-youdao/youdao_translate_config.h
+        plugins/translate-youdao/youdao_translate_plugin.cpp
+        plugins/translate-youdao/youdao_translate_plugin.h
+        plugins/translate-youdao/youdao_translate_request.cpp
+        plugins/translate-youdao/youdao_translate_request.h
+        plugins/translate-youdao/youdao_translate_signer.cpp
+        plugins/translate-youdao/youdao_translate_signer.h
+    )
+    target_include_directories(mark-shot-translate-youdao-plugin-test PRIVATE
+        plugins/translate-youdao
+        plugin-sdk
+    )
+    target_link_libraries(mark-shot-translate-youdao-plugin-test
+        PRIVATE
+            mark-shot-translate-common
+            Qt6::Core
+            Qt6::Network
+            Qt6::Test
+    )
+    add_test(NAME translate-youdao-plugin COMMAND mark-shot-translate-youdao-plugin-test)
 endif()
 
 if(TARGET mark-shot-code-scan-zxing AND MARK_SHOT_ZXING_WRITER_SUPPORTED)

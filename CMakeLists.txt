@@ -406,7 +406,11 @@ include(cmake/pipewire_capture_target.cmake)
 
 # provider 插件：可选构建，依赖缺失时各自跳过；需在测试注册前定义 target
 add_subdirectory(plugins/ocr-rapid)
+add_subdirectory(plugins/translate-common)
 add_subdirectory(plugins/translate-openai)
+add_subdirectory(plugins/translate-tencent)
+add_subdirectory(plugins/translate-baidu)
+add_subdirectory(plugins/translate-youdao)
 add_subdirectory(plugins/code-scan-zxing)
 
 include(CTest)

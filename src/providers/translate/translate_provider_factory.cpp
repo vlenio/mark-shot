@@ -6,17 +6,51 @@
 #include "providers/translate/translate_openai_task.h"
 #include "providers/translate/translate_plugin_task.h"
 
+#include <algorithm>
+
 namespace markshot::providers {
 namespace {
 
 /**
+ * 读取翻译插件在 auto 链中的优先级。
+ *
+ * 插件注册表按文件系统顺序加载，多个插件同时可用时 auto 的结果会不确定。
+ * 这里给出固定次序，openai-compatible 排在最前以保持既有配置的行为不变。
+ *
+ * @param providerId 插件 provider 标识。
+ * @return 优先级序号，数值越小越优先。
+ */
+int translateProviderRank(const QString &providerId)
+{
+    static const QStringList order = {QStringLiteral("openai-compatible"),
+                                      QStringLiteral("tencent-tmt"),
+                                      QStringLiteral("baidu-fanyi"),
+                                      QStringLiteral("youdao-nmt")};
+    const int index = order.indexOf(providerId);
+    return index < 0 ? order.size() : index;
+}
+
+/**
  * 选择第一个可用的翻译插件。
- * @param preferredId 指定插件 id，空串表示任意。
+ * @param preferredId 指定插件 id，空串表示按 auto 优先级挑选。
  * @return 可用插件，找不到时返回空指针。
  */
 markshot::plugin::TranslateProviderPlugin *pickTranslatePlugin(const QString &preferredId)
 {
-    const auto plugins = ProviderPluginRegistry::instance().translateProviders();
+    auto plugins = ProviderPluginRegistry::instance().translateProviders();
+
+    // 1. 未指定 id 时按固定优先级排序，避免 auto 结果随加载顺序漂移
+    if (preferredId.isEmpty()) {
+        std::stable_sort(plugins.begin(),
+                         plugins.end(),
+                         [](markshot::plugin::TranslateProviderPlugin *left,
+                            markshot::plugin::TranslateProviderPlugin *right) {
+                             return translateProviderRank(left->providerId())
+                                 < translateProviderRank(right->providerId());
+                         });
+    }
+
+    // 2. 取首个配置完整的插件，凭据缺失的插件自动跳过
     for (markshot::plugin::TranslateProviderPlugin *plugin : plugins) {
         if (!preferredId.isEmpty() && plugin->providerId() != preferredId) {
             continue;
