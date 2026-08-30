@@ -123,6 +123,7 @@ Mark Shot 在 Linux 上从 `~/.config/mark-shot/config.json` 读取应用配置�
   "translation": {
     "autoAfterOcr": false,
     "targetLanguage": "Simplified Chinese",
+    "provider": "auto",
     "apiBase": "https://api.openai.com/v1",
     "apiKeyEnv": "OPENAI_API_KEY",
     "apiKey": "",
@@ -131,10 +132,15 @@ Mark Shot 在 Linux 上从 `~/.config/mark-shot/config.json` 读取应用配置�
     "timeoutMs": 60000,
     "timeoutSeconds": 60,
     "systemPrompt": "",
-    "command": ""
+    "command": "",
+    "tencent": { "secretId": "", "secretKey": "", "region": "ap-guangzhou" },
+    "baidu": { "appId": "", "appKey": "" },
+    "youdao": { "appKey": "", "appSecret": "" }
   }
 }
 ```
+
+翻译能力由 provider 插件提供。`translation.provider` 的取值顺序、腾讯与百度与有道的凭据字段、对应环境变量以及各家语言代码，见[翻译服务提供方文档](translation-providers.zh-CN.md)。
 
 | 配置项键名 | 数据类型 | 默认值 | 功能描述 |
 | :--- | :---: | :---: | :--- |

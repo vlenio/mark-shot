@@ -123,6 +123,7 @@ Mark Shot reads application settings from `~/.config/mark-shot/config.json` on L
   "translation": {
     "autoAfterOcr": false,
     "targetLanguage": "Simplified Chinese",
+    "provider": "auto",
     "apiBase": "https://api.openai.com/v1",
     "apiKeyEnv": "OPENAI_API_KEY",
     "apiKey": "",
@@ -131,10 +132,15 @@ Mark Shot reads application settings from `~/.config/mark-shot/config.json` on L
     "timeoutMs": 60000,
     "timeoutSeconds": 60,
     "systemPrompt": "",
-    "command": ""
+    "command": "",
+    "tencent": { "secretId": "", "secretKey": "", "region": "ap-guangzhou" },
+    "baidu": { "appId": "", "appKey": "" },
+    "youdao": { "appKey": "", "appSecret": "" }
   }
 }
 ```
+
+Translation runs through provider plugins. See the [translation provider guide](translation-providers.md) for the `translation.provider` selection order, the Tencent, Baidu, and Youdao credential fields, their environment variables, and the per-vendor language codes.
 
 | Configuration Key | Data Type | Default Value | Description |
 | :--- | :---: | :---: | :--- |
