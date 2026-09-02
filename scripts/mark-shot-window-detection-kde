@@ -60,6 +60,44 @@ def intersects(left, right):
     return ax < bx + bw and bx < ax + aw and ay < by + bh and by < ay + ah
 
 
+def rectangle_difference(rect, occluder):
+    """返回 rect 被 occluder 覆盖后剩余的矩形区域。"""
+    x, y, width, height = rect
+    ox, oy, owidth, oheight = occluder
+    ix = max(x, ox)
+    iy = max(y, oy)
+    ix2 = min(x + width, ox + owidth)
+    iy2 = min(y + height, oy + oheight)
+
+    if ix >= ix2 or iy >= iy2:
+        return [rect]
+
+    pieces = []
+    if ix > x:
+        pieces.append((x, y, ix - x, height))
+    if ix2 < x + width:
+        pieces.append((ix2, y, x + width - ix2, height))
+    if iy > y:
+        pieces.append((ix, y, ix2 - ix, iy - y))
+    if iy2 < y + height:
+        pieces.append((ix, iy2, ix2 - ix, y + height - iy2))
+    return pieces
+
+
+def is_fully_occluded(rect, occluders):
+    """判断矩形是否被更高层窗口完全覆盖。"""
+    remaining = [rect]
+    for occluder in occluders:
+        remaining = [
+            piece
+            for candidate in remaining
+            for piece in rectangle_difference(candidate, occluder)
+        ]
+        if not remaining:
+            return True
+    return False
+
+
 def rect_adjustment():
     """读取 KDE 窗口矩形偏移配置。
     参数:
@@ -256,7 +294,7 @@ def script_source(token):
         return false;
     }}
 
-    function appendWindow(result, seen, window, zOrder) {{
+    function appendWindow(result, window, zOrder) {{
         if (!window || shouldSkip(window)) {{
             return;
         }}
@@ -264,11 +302,6 @@ def script_source(token):
         if (!rect) {{
             return;
         }}
-        const key = [rect.x, rect.y, rect.width, rect.height].join(",");
-        if (seen[key]) {{
-            return;
-        }}
-        seen[key] = true;
         const item = {{
             x: rect.x,
             y: rect.y,
@@ -306,10 +339,9 @@ def script_source(token):
     }}
 
     const result = [];
-    const seen = {{}};
     const windows = workspace.stackingOrder || [];
     for (let i = 0; i < windows.length; i += 1) {{
-        appendWindow(result, seen, windows[i], i);
+        appendWindow(result, windows[i], i);
     }}
     print("{MARKER} " + token + " " + JSON.stringify({{compositor: "kde", windows: result}}));
 }})();
@@ -555,6 +587,7 @@ def normalize_window(window):
         "fullScreen",
         "waylandClient",
         "x11Client",
+        "zOrder",
     ):
         if key in window:
             result[key] = window[key]
@@ -572,25 +605,36 @@ def selected_windows(payload):
     if not isinstance(windows, list):
         return []
 
+    candidates = []
+    for window in windows:
+        item = normalize_window(window)
+        if item is not None:
+            candidates.append(item)
+
+    visible = []
+    seen = set()
+    occluders = []
+    for item in reversed(candidates):
+        rect = (item["x"], item["y"], item["width"], item["height"])
+        if rect in seen:
+            continue
+        seen.add(rect)
+        if is_fully_occluded(rect, occluders):
+            continue
+        visible.append(item)
+        occluders.append(rect)
+    visible.reverse()
+
     capture = capture_rect()
     target_output = os.environ.get("MARK_SHOT_CAPTURE_OUTPUT", "").strip()
     all_outputs = os.environ.get("MARK_SHOT_CAPTURE_ALL_OUTPUTS") == "1"
     result = []
-    seen = set()
-
-    for window in windows:
-        item = normalize_window(window)
-        if item is None:
-            continue
+    for item in visible:
         if target_output and not all_outputs and item.get("output") not in ("", target_output):
             continue
         rect = (item["x"], item["y"], item["width"], item["height"])
         if capture is not None and not intersects(rect, capture):
             continue
-        key = tuple(rect)
-        if key in seen:
-            continue
-        seen.add(key)
         result.append(item)
     return result
 
