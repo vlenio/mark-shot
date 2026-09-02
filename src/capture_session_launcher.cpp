@@ -169,9 +169,6 @@ ShotWindow *showCaptureWindow(QScreen *screen,
         : (screen ? screen->geometry() : QRect());
     const QString outputName = (!allOutputs && screen) ? screen->name() : QString();
     const bool detectWindows = markshot::windowDetectionEnabled();
-    const QVector<markshot::WindowInfo> windowInfos = detectWindows
-        ? markshot::collectConfiguredWindowInfos(captureGeometry, outputName, allOutputs)
-        : QVector<markshot::WindowInfo>();
     CaptureRequest request;
     request.preferredOutputName = outputName;
     request.sourceGeometry = captureGeometry;
@@ -190,6 +187,12 @@ ShotWindow *showCaptureWindow(QScreen *screen,
         ? capture.sourceGeometry
         : captureGeometry;
     const QString capturedOutputName = capture.outputName.isEmpty() ? outputName : capture.outputName;
+    // Sample stacking after the pixels are captured. Portal capture can block
+    // while focus/stacking changes, so pre-capture geometry can describe a
+    // different desktop state than the frozen frame.
+    const QVector<markshot::WindowInfo> windowInfos = detectWindows
+        ? markshot::collectConfiguredWindowInfos(sourceGeometry, capturedOutputName, allOutputs)
+        : QVector<markshot::WindowInfo>();
     return showCapturedWindow(screen,
                               std::move(capture.image),
                               capturedOutputName,
@@ -422,9 +425,6 @@ QVector<CapturedScreenFrame> captureScreensIndividually(const QList<QScreen *> &
 
         const QRect captureGeometry = screen->geometry();
         const QString outputName = screen->name();
-        const QVector<markshot::WindowInfo> windowInfos = detectWindows
-            ? markshot::collectConfiguredWindowInfos(captureGeometry, outputName, false)
-            : QVector<markshot::WindowInfo>();
 
         CaptureRequest request;
         request.preferredOutputName = outputName;
@@ -458,7 +458,9 @@ QVector<CapturedScreenFrame> captureScreensIndividually(const QList<QScreen *> &
         frame.sourceGeometry = capture.sourceGeometry.isValid() && !capture.sourceGeometry.isEmpty()
             ? capture.sourceGeometry
             : captureGeometry;
-        frame.windowInfos = windowInfos;
+        frame.windowInfos = detectWindows
+            ? markshot::collectConfiguredWindowInfos(frame.sourceGeometry, frame.outputName, false)
+            : QVector<markshot::WindowInfo>();
         frame.detectWindows = detectWindows;
         markshot::debugLog("capture-session",
                            "【截图会话】【缩放诊断】individual-result screen=%s output=%s "
